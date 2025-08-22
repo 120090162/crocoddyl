@@ -10,6 +10,10 @@ set(PROJECT_URL https://github.com/${PROJECT_NAMESPACE}/${PROJECT_NAME})
 
 option(INSTALL_DOCUMENTATION "Generate and install the documentation" OFF)
 
+# 1. 固定版本跳过 Git 检测 --------------------------------------------------
+# set(${PROJECT_NAME}_VERSION ${VERSION})
+#-----------------------------------------------------------------------
+
 # Check if the submodule cmake have been initialized
 set(JRL_CMAKE_MODULES "${CMAKE_CURRENT_LIST_DIR}/cmake")
 if(EXISTS "${JRL_CMAKE_MODULES}/base.cmake")
@@ -49,7 +53,7 @@ include("${JRL_CMAKE_MODULES}/stubs.cmake")
 include("${JRL_CMAKE_MODULES}/python-helpers.cmake")
 
 # Print initial message
-message(STATUS "${PROJECT_DESCRIPTION}, version ${PROJECT_VERSION}")
+# message(STATUS "${PROJECT_DESCRIPTION}, version ${VERSION}")
 message(
   STATUS "Copyright (C) 2018-2024 CNRS-LAAS, University of Edinburgh, INRIA")
 message(STATUS "                        Heriot-Watt University")
@@ -59,8 +63,8 @@ message(STATUS "Released under the BSD 3-Clause License.")
 # Set a default build type to 'Release' if none was specified
 set_default_cmake_build_type("Release")
 
-set(DOXYGEN_USE_MATHJAX YES)
-set(DOXYGEN_USE_TEMPLATE_CSS YES)
+set(DOXYGEN_USE_MATHJAX NO)
+set(DOXYGEN_USE_TEMPLATE_CSS NO)
 
 set(CXX_DISABLE_WERROR False)
 set(PROJECT_USE_CMAKE_EXPORT True)
@@ -68,9 +72,10 @@ set(PROJECT_USE_CMAKE_EXPORT True)
 # Create different building options
 option(ENABLE_VECTORIZATION
        "Enable vectorization and further processor-related optimizations" OFF)
-option(BUILD_PYTHON_INTERFACE "Build the python binding" ON)
-option(BUILD_BENCHMARK "Build the benchmark" ON)
-option(BUILD_EXAMPLES "Build the examples" ON)
+option(BUILD_PYTHON_INTERFACE "Build the python binding" OFF)
+option(BUILD_BENCHMARK "Build the benchmark" OFF)
+option(BUILD_TESTING "Build the testing" OFF)
+option(BUILD_EXAMPLES "Build the examples" OFF)
 option(BUILD_WITH_IPOPT "Build the IPOPT wrapper." ON)
 option(GENERATE_PYTHON_STUBS
        "Generate the Python stubs associated to the Python library" OFF)
@@ -78,6 +83,12 @@ option(GENERATE_PYTHON_STUBS
 if(ENABLE_VECTORIZATION)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 endif()
+
+# 2. 添加此宏跳过 Git 版本检测 ----------------------------------------------
+# macro(git_describe var)
+  # set(${var} ${VERSION} PARENT_SCOPE)
+# endmacro()
+#-----------------------------------------------------------------------
 
 compute_project_args(PROJECT_ARGS LANGUAGES CXX)
 project(${PROJECT_NAME} ${PROJECT_ARGS})
@@ -105,6 +116,9 @@ if(BUILD_PYTHON_INTERFACE)
 endif(BUILD_PYTHON_INTERFACE)
 add_project_dependency(pinocchio 3.4.0 REQUIRED PKG_CONFIG_REQUIRES
                        "pinocchio >= 3.4.0")
+
+set(BUILD_TESTING OFF CACHE BOOL "Forced OFF" FORCE)
+
 if(BUILD_EXAMPLES
    OR BUILD_TESTING
    OR BUILD_BENCHMARK)
@@ -125,7 +139,7 @@ option(
 
 option(BUILD_WITH_MULTITHREADS
        "Build the library with the Multithreading support (required OpenMP)"
-       OFF)
+       ON)
 if(BUILD_WITH_MULTITHREADS)
   # If BUILD_WITH_NTHREADS defined, use the value - otherwise detect
   if(NOT DEFINED BUILD_WITH_NTHREADS)
@@ -235,7 +249,6 @@ if(UNIX)
                         Boost::serialization)
   target_compile_definitions(
     ${PROJECT_NAME} PUBLIC PINOCCHIO_ENABLE_COMPATIBILITY_WITH_VERSION_2)
-  set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 
   if(BUILD_WITH_MULTITHREADS)
     target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
