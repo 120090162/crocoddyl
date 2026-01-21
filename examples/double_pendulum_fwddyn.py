@@ -3,7 +3,7 @@ import signal
 import sys
 import time
 
-import example_robot_data
+from robot_descriptions.loaders.pinocchio import load_robot_description as plr
 import numpy as np
 
 import crocoddyl
@@ -14,10 +14,11 @@ from crocoddyl.utils.pendulum import (
 
 WITHDISPLAY = "display" in sys.argv or "CROCODDYL_DISPLAY" in os.environ
 WITHPLOT = "plot" in sys.argv or "CROCODDYL_PLOT" in os.environ
+print("Display:", WITHDISPLAY, "Plot:", WITHPLOT)
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 # Loading the double pendulum model
-pendulum = example_robot_data.load("double_pendulum")
+pendulum = plr("double_pendulum_description")
 model = pendulum.model
 
 state = crocoddyl.StateMultibody(model)

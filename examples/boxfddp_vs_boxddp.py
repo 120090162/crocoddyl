@@ -3,7 +3,7 @@ import signal
 import sys
 import time
 
-import example_robot_data
+from robot_descriptions.loaders.pinocchio import load_robot_description as plr
 import numpy as np
 import pinocchio
 
@@ -12,10 +12,12 @@ from crocoddyl.utils.quadruped import SimpleQuadrupedalGaitProblem, plotSolution
 
 WITHDISPLAY = "display" in sys.argv or "CROCODDYL_DISPLAY" in os.environ
 WITHPLOT = "plot" in sys.argv or "CROCODDYL_PLOT" in os.environ
+print("Display:", WITHDISPLAY, "Plot:", WITHPLOT)
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 # Loading the anymal model
-anymal = example_robot_data.load("anymal")
+anymal_mj = plr("anymal_b_mj_description")
+anymal = plr("anymal_b_description")
 lims = anymal.model.effortLimit
 lims *= 0.4  # reduced artificially the torque limits
 anymal.model.effortLimit = lims
@@ -24,7 +26,8 @@ lims *= 0.5
 anymal.model.velocityLimit = lims
 
 # Defining the initial state of the robot
-q0 = anymal.model.referenceConfigurations["standing"].copy()
+q0 = anymal_mj.model.referenceConfigurations["qpos0"].copy()
+anymal.model.referenceConfigurations["standing"] = q0.copy()
 v0 = pinocchio.utils.zero(anymal.model.nv)
 x0 = np.concatenate([q0, v0])
 
