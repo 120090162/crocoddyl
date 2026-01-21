@@ -158,7 +158,7 @@ void ContactModel6DTpl<Scalar>::updateForce(
         "Invalid argument: " << "lambda has wrong dimension (it should be 6)");
   }
   Data* d = static_cast<Data*>(data.get());
-  data->f = pinocchio::ForceTpl<Scalar>(force);
+  data->f = pinocchio::ForceTpl<Scalar>(force.template head<6>());
   switch (type_) {
     case pinocchio::ReferenceFrame::LOCAL:
       data->fext = data->jMf.act(data->f);
